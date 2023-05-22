@@ -1,15 +1,23 @@
 const express = require('express');
 const mongoose = require('mongoose');
 
-mongoose.connect('mongodb://localhost:27017/mestodb');
-const app = express();
+const DB_URL = 'mongodb://127.0.0.1:27017/mestodb';
+const router = require('./routes/routers');
 
 const { PORT = 3000 } = process.env;
 
-app.use(express.json());
+mongoose.connect(DB_URL);
 
-app.get('/', (req, res) => {
-  res.send('123');
+const app = express();
+
+app.use(express.json());
+app.use(router);
+
+app.use((req, res, next) => {
+  req.user = {
+    _id: new mongoose.Types.ObjectId('646bc93036a6d4be3a6c55d3'),
+  };
+  next();
 });
 
 app.listen(PORT, () => {
