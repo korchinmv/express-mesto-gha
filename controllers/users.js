@@ -16,7 +16,7 @@ const getUsers = async (req, res) => {
 const getUserById = async (req, res) => {
   try {
     const user = await userModel.findById(req.params.userId);
-    res.send(user);
+    res.send({ data: user });
   } catch (error) {
     res.status(500).send({
       message: 'Internal Sever Error',
@@ -29,7 +29,7 @@ const getUserById = async (req, res) => {
 const createUser = async (req, res) => {
   try {
     const user = await userModel.create(req.body);
-    res.status(201).send(user);
+    res.status(201).send({ data: user });
   } catch (error) {
     res.status(500).send({
       message: 'Internal Sever Error',

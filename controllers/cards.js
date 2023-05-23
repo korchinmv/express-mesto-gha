@@ -15,8 +15,8 @@ const getCards = async (req, res) => {
 
 const createCard = async (req, res) => {
   try {
-    const card = await cardModel.create(req.body);
-    res.status(201).send(card);
+    const card = await cardModel.create({ ...req.body, owner: req.user._id });
+    res.status(201).send({ data: card });
   } catch (error) {
     res.status(500).send({
       message: 'Internal Sever Error"',
@@ -28,8 +28,8 @@ const createCard = async (req, res) => {
 
 const deleteCard = async (req, res) => {
   try {
-    const deletedCard = await cardModel.findByIdAndDelete(req.body._id);
-    res.send(deletedCard);
+    const deletedCard = await cardModel.findByIdAndDelete(req.params.cardId);
+    res.send({ data: deletedCard });
   } catch (error) {
     res.status(500).send({
       message: 'Internal Sever Error"',
