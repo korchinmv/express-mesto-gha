@@ -4,6 +4,7 @@ const messageNotUser = 'Пользователь с указанным id не �
 const messageDataError = 'Переданы некорректные данные';
 const messageServerError = 'Ошибка сервера';
 const CREATED = 201;
+const OK = 200;
 const BAD_REQUEST = 400;
 const NOT_FOUND = 404;
 const SERVER_ERROR = 500;
@@ -24,13 +25,13 @@ const getUsers = async (req, res) => {
 // eslint-disable-next-line consistent-return
 const getUserById = async (req, res) => {
   try {
-    const user = await userModel.findById(req.params.userId);
+    const user = await userModel.findById(req.params.userId).orFail(new Error('NotValidId'));
     res.send({ data: user });
   } catch (error) {
-    if (error.name === 'Error') {
+    if (error.message === 'NotValidId' || error.name === 'CastError') {
       return res.status(NOT_FOUND).send({ message: messageNotUser });
-    } if (error.name === 'CastError') {
-      return res.status(BAD_REQUEST).send({ message: messageDataError });
+    } if (error.name === 'Error') {
+      return res.status(NOT_FOUND).send({ message: messageNotUser });
     }
 
     res.status(SERVER_ERROR).send({
@@ -64,7 +65,7 @@ const updateUser = async (req, res) => {
   try {
     // eslint-disable-next-line max-len
     const updatedUser = await userModel.findByIdAndUpdate(req.user._id, req.body, { new: true, runValidators: true });
-    res.status(CREATED).send({ data: updatedUser });
+    res.status(OK).send({ data: updatedUser });
   } catch (error) {
     if (error.name === 'ValidationError') {
       return res.status(BAD_REQUEST).send({ message: messageDataError });
@@ -86,7 +87,7 @@ const updateAvatar = async (req, res) => {
   try {
     // eslint-disable-next-line max-len
     const updatedAvatar = await userModel.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true });
-    res.status(CREATED).send({ data: updatedAvatar });
+    res.status(OK).send({ data: updatedAvatar });
   } catch (error) {
     if (error.name === 'ValidationError') {
       return res.status(BAD_REQUEST).send({ message: messageDataError });

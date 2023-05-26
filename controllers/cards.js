@@ -67,13 +67,13 @@ const likeCard = async (req, res) => {
       req.params.cardId,
       { $addToSet: { likes: req.user._id } },
       { new: true },
-    );
+    ).orFail(new Error('NoValidId'));
     res.send({ data: licked });
   } catch (error) {
-    if (error.name === 'CastError') {
-      return res.status(BAD_REQUEST).send({ message: messageDataError });
-    } if (error.name === 'Error') {
+    if (error.message === 'NoValidId' || error.name === 'Error') {
       return res.status(NOT_FOUND).send({ message: messageNotFound });
+    } if (error.name === 'CastError') {
+      return res.status(BAD_REQUEST).send({ message: messageDataError });
     }
 
     res.status(SERVER_ERROR).send({
@@ -91,13 +91,13 @@ const dislikeCard = async (req, res) => {
       req.params.cardId,
       { $pull: { likes: req.user._id } },
       { new: true },
-    );
+    ).orFail(new Error('NoValidId'));
     res.send({ data: disliked });
   } catch (error) {
-    if (error.name === 'CastError') {
-      return res.status(BAD_REQUEST).send({ message: messageDataError });
-    } if (error.name === 'Error') {
+    if (error.message === 'NoValidId' || error.name === 'Error') {
       return res.status(NOT_FOUND).send({ message: messageNotFound });
+    } if (error.name === 'CastError') {
+      return res.status(BAD_REQUEST).send({ message: messageDataError });
     }
 
     res.status(SERVER_ERROR).send({
