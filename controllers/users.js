@@ -62,7 +62,8 @@ const createUser = async (req, res) => {
 // eslint-disable-next-line consistent-return
 const updateUser = async (req, res) => {
   try {
-    const updatedUser = await userModel.findByIdAndUpdate(req.user._id, req.body, { new: true });
+    // eslint-disable-next-line max-len
+    const updatedUser = await userModel.findByIdAndUpdate(req.user._id, req.body, { new: true, runValidators: true });
     res.status(CREATED).send({ data: updatedUser });
   } catch (error) {
     if (error.name === 'ValidationError') {
@@ -84,7 +85,7 @@ const updateAvatar = async (req, res) => {
   const { avatar } = req.body;
   try {
     // eslint-disable-next-line max-len
-    const updatedAvatar = await userModel.findByIdAndUpdate(req.user._id, { avatar }, { new: true });
+    const updatedAvatar = await userModel.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true });
     res.status(CREATED).send({ data: updatedAvatar });
   } catch (error) {
     if (error.name === 'ValidationError') {
