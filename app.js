@@ -21,13 +21,16 @@ app.use(router);
 async function startApp() {
   try {
     mongoose.connect(DB_URL);
+    // eslint-disable-next-line no-console
+    console.log('Подключились к базе данных');
     app.listen(PORT, () => {
       // eslint-disable-next-line no-console
-      console.log(`Server is running on ${PORT} port`);
+      console.log(`Сервер работает на ${PORT} порту`);
     });
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.log(error);
+    console.log('Ошибка сервера');
+    process.exit(1);
   }
 }
 
