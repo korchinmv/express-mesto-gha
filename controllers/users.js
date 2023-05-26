@@ -66,10 +66,10 @@ const createUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     // eslint-disable-next-line max-len
-    const updatedUser = await userModel.findByIdAndUpdate(req.user._id, req.body, { new: true, runValidators: true });
+    const updatedUser = await userModel.findByIdAndUpdate(req.user._id, req.body, { new: true, runValidators: true }).orFail(new Error('NotValidData'));
     res.status(OK).send({ data: updatedUser });
   } catch (error) {
-    if (error.name === 'ValidationError') {
+    if (error.message === 'NotValidData' || error.name === 'ValidationError') {
       return res.status(BAD_REQUEST).send({ message: messageDataError });
     } if (error.name === 'Error') {
       return res.status(NOT_FOUND).send({ message: messageNotUser });
