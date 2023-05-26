@@ -28,10 +28,12 @@ const getUserById = async (req, res) => {
     const user = await userModel.findById(req.params.userId).orFail(new Error('NotValidId'));
     res.send({ data: user });
   } catch (error) {
-    if (error.message === 'NotValidId' || error.name === 'CastError') {
+    if (error.message === 'NotValidId') {
       return res.status(NOT_FOUND).send({ message: messageNotUser });
     } if (error.name === 'Error') {
       return res.status(NOT_FOUND).send({ message: messageNotUser });
+    } if (error.name === 'CastError') {
+      return res.status(BAD_REQUEST).send({ message: messageDataError });
     }
 
     res.status(SERVER_ERROR).send({

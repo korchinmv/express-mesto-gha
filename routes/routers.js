@@ -7,8 +7,8 @@ const badRequest = 'Страница не найдена';
 
 router.use('/users', userRouter);
 router.use('/cards', cardsRouter);
-router.use((req, res) => {
-  res.status(notFound).send({ mesage: badRequest });
+router.use((req, res, next) => {
+  next(res.status(notFound).send({ mesage: badRequest }));
 });
 
 module.exports = router;
