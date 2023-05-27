@@ -1,13 +1,8 @@
 const userModel = require('../models/user');
-
-const messageNotUser = 'Пользователь с указанным id не найден';
-const messageDataError = 'Переданы некорректные данные';
-const messageServerError = 'Ошибка сервера';
-const CREATED = 201;
-const OK = 200;
-const BAD_REQUEST = 400;
-const NOT_FOUND = 404;
-const SERVER_ERROR = 500;
+const {
+  // eslint-disable-next-line max-len
+  messageNotUser, messageDataError, messageServerError, CREATED, BAD_REQUEST, NOT_FOUND, SERVER_ERROR,
+} = require('../utils/responses');
 
 const getUsers = async (req, res) => {
   try {
@@ -67,9 +62,11 @@ const updateUser = async (req, res) => {
   try {
     // eslint-disable-next-line max-len
     const updatedUser = await userModel.findByIdAndUpdate(req.user._id, req.body, { new: true, runValidators: true }).orFail(new Error('NotValidData'));
-    res.status(OK).send({ data: updatedUser });
+    res.send({ data: updatedUser });
   } catch (error) {
-    if (error.message === 'NotValidData' || error.name === 'ValidationError') {
+    if (error.message === 'NotValidData') {
+      return res.status(NOT_FOUND).send({ message: messageDataError });
+    } if (error.name === 'ValidationError') {
       return res.status(BAD_REQUEST).send({ message: messageDataError });
     } if (error.name === 'Error') {
       return res.status(NOT_FOUND).send({ message: messageNotUser });
@@ -89,7 +86,7 @@ const updateAvatar = async (req, res) => {
   try {
     // eslint-disable-next-line max-len
     const updatedAvatar = await userModel.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true });
-    res.status(OK).send({ data: updatedAvatar });
+    res.send({ data: updatedAvatar });
   } catch (error) {
     if (error.name === 'ValidationError') {
       return res.status(BAD_REQUEST).send({ message: messageDataError });

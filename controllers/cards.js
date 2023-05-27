@@ -1,13 +1,9 @@
 const cardModel = require('../models/card');
 
-const messageNotCard = 'Карточка с указанным id не найдена';
-const messageDataError = 'Переданы некорректные данные';
-const messageNotFound = 'Передан несуществующий id карточки';
-const messageServerError = 'Ошибка сервера';
-const CREATED = 201;
-const BAD_REQUEST = 400;
-const NOT_FOUND = 404;
-const SERVER_ERROR = 500;
+const {
+  // eslint-disable-next-line max-len
+  messageNotCard, messageDataError, messageNotFound, messageServerError, CREATED, BAD_REQUEST, NOT_FOUND, SERVER_ERROR,
+} = require('../utils/responses');
 
 const getCards = async (req, res) => {
   try {
