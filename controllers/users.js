@@ -1,7 +1,8 @@
+const bcrypt = require('bcryptjs');
 const userModel = require('../models/user');
 const {
   // eslint-disable-next-line max-len
-  messageNotUser, messageDataError, messageServerError, CREATED, BAD_REQUEST, NOT_FOUND, SERVER_ERROR,
+  messageNotUser, messageDataError, messageServerError, messageErrorEmailOrPassword, CREATED, BAD_REQUEST, NOT_FOUND, SERVER_ERROR,
 } = require('../utils/responses');
 
 const getUsers = async (req, res) => {
@@ -41,8 +42,18 @@ const getUserById = async (req, res) => {
 
 // eslint-disable-next-line consistent-return
 const createUser = async (req, res) => {
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+  const hashPassword = await bcrypt.hash(password, 12);
   try {
-    const user = await userModel.create(req.body);
+    const user = await userModel.create({
+      password: hashPassword,
+      name,
+      about,
+      avatar,
+      email,
+    });
     res.status(CREATED).send({ data: user });
   } catch (error) {
     if (error.name === 'ValidationError') {
@@ -54,6 +65,15 @@ const createUser = async (req, res) => {
       error: error.message,
       stack: error.stack,
     });
+  }
+};
+
+const login = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+
+  } catch (error) {
+
   }
 };
 
@@ -108,4 +128,5 @@ module.exports = {
   getUserById,
   updateUser,
   updateAvatar,
+  login,
 };
