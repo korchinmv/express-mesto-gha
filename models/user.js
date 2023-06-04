@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Поле "password" должно быть заполнено'],
     minlength: 5,
+    select: false,
   },
 }, { versionKey: false });
 

@@ -1,8 +1,9 @@
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const userModel = require('../models/user');
 const {
   // eslint-disable-next-line max-len
-  messageNotUser, messageDataError, messageServerError, messageErrorEmailOrPassword, CREATED, BAD_REQUEST, NOT_FOUND, SERVER_ERROR,
+  messageNotUser, messageDataError, messageServerError, messageErrorEmailOrPassword, CREATED, BAD_REQUEST, NOT_FOUND, SERVER_ERROR, SECRET_KEY,
 } = require('../utils/responses');
 
 const getUsers = async (req, res) => {
@@ -71,9 +72,24 @@ const createUser = async (req, res) => {
 const login = async (req, res) => {
   const { email, password } = req.body;
   try {
-
+    const user = await userModel.findOne({ email }).select('+password').orFail(new Error('UnauthorizedError'));
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      res.status(401).send({ message: messageErrorEmailOrPassword });
+      return;
+    }
+    const token = jwt.sign({ _id: user._id }, SECRET_KEY, { expiresIn: '7d' });
+    res.send({ token });
   } catch (error) {
-
+    if (error.message === 'UnauthorizedError') {
+      res.status(401).send({ message: messageErrorEmailOrPassword });
+      return;
+    }
+    res.status(SERVER_ERROR).send({
+      message: messageServerError,
+      error: error.message,
+      stack: error.stack,
+    });
   }
 };
 
