@@ -13,13 +13,6 @@ const app = express();
 app.use(helmet());
 app.disable('x-powered-by');
 app.use(express.json());
-app.use((req, res, next) => {
-  req.user = {
-    _id: '646d1ebe969627b3d5363e47',
-  };
-
-  next();
-});
 app.use(router);
 
 async function startApp() {
