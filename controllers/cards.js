@@ -2,7 +2,7 @@ const cardModel = require('../models/card');
 
 const {
   // eslint-disable-next-line max-len
-  messageNotCard, messageDataError, messageNotFound, messageServerError, CREATED, BAD_REQUEST, NOT_FOUND, SERVER_ERROR,
+  messageNotCard, messageNoRights, messageDataError, messageNotFound, messageServerError, CREATED, BAD_REQUEST, NOT_FOUND, SERVER_ERROR,
 } = require('../utils/responses');
 
 const getCards = async (req, res) => {
@@ -39,8 +39,12 @@ const createCard = async (req, res) => {
 // eslint-disable-next-line consistent-return
 const deleteCard = async (req, res) => {
   try {
-    const deletedCard = await cardModel.findByIdAndDelete(req.params.cardId).orFail(new Error('DocumentNotFoundError'));
-    res.send({ data: deletedCard });
+    const ownCard = await cardModel.findById(req.params.cardId).orFail(new Error('DocumentNotFoundError'));
+    if (ownCard.owner.toString() !== req.params.cardId) {
+      return res.status(403).send({ message: messageNoRights });
+    }
+    await cardModel.deleteOne(ownCard._id);
+    res.send({ data: ownCard });
   } catch (error) {
     if (error.name === 'CastError') {
       return res.status(BAD_REQUEST).send({ message: `${messageNotCard}` });

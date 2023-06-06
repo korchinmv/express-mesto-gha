@@ -20,6 +20,28 @@ const getUsers = async (req, res) => {
 };
 
 // eslint-disable-next-line consistent-return
+const getUser = async (req, res) => {
+  try {
+    const user = await userModel.findById(req.user._id).orFail(new Error('NotValidId'));
+    res.send({ data: user });
+  } catch (error) {
+    if (error.message === 'NotValidId') {
+      return res.status(NOT_FOUND).send({ message: messageNotUser });
+    } if (error.name === 'Error') {
+      return res.status(NOT_FOUND).send({ message: messageNotUser });
+    } if (error.name === 'CastError') {
+      return res.status(BAD_REQUEST).send({ message: messageDataError });
+    }
+
+    res.status(SERVER_ERROR).send({
+      message: messageServerError,
+      error: error.message,
+      stack: error.stack,
+    });
+  }
+};
+
+// eslint-disable-next-line consistent-return
 const getUserById = async (req, res) => {
   try {
     const user = await userModel.findById(req.params.userId).orFail(new Error('NotValidId'));
@@ -144,5 +166,6 @@ module.exports = {
   getUserById,
   updateUser,
   updateAvatar,
+  getUser,
   login,
 };

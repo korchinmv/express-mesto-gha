@@ -5,6 +5,7 @@ const messageServerError = 'Ошибка сервера';
 const messageNotUser = 'Пользователь с указанным id не найден';
 const messageErrorEmailOrPassword = 'Неправильные почта или пароль';
 const messageAuthorizationError = 'Пользователь не авторизован';
+const messageNoRights = 'Нет прав';
 const CREATED = 201;
 const BAD_REQUEST = 400;
 const NOT_FOUND = 404;
@@ -18,6 +19,7 @@ module.exports = {
   messageAuthorizationError,
   messageErrorEmailOrPassword,
   messageNotUser,
+  messageNoRights,
   CREATED,
   BAD_REQUEST,
   NOT_FOUND,
