@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const helmet = require('helmet');
+const { errors } = require('celebrate');
 const centralError = require('./middlewares/centrelError');
 
 const DB_URL = 'mongodb://127.0.0.1:27017/mestodb';
@@ -15,6 +16,7 @@ app.use(helmet());
 app.disable('x-powered-by');
 app.use(express.json());
 app.use(router);
+app.use(errors());
 app.use(centralError);
 
 async function startApp() {
