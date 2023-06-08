@@ -2,109 +2,88 @@ const cardModel = require('../models/card');
 
 const {
   // eslint-disable-next-line max-len
-  messageNotCard, messageNoRights, messageDataError, messageNotFound, messageServerError, CREATED, BAD_REQUEST, NOT_FOUND, SERVER_ERROR,
+  messageNotCard, messageNoRights, messageDataError, messageNotFound, CREATED,
 } = require('../utils/responses');
+const NotFoundError = require('../errors/NotFoundError');
+const ValidationError = require('../errors/ValidationError');
+const ForbiddenError = require('../errors/ForbiddenError');
 
-const getCards = async (req, res) => {
+const getCards = async (req, res, next) => {
   try {
     const cards = await cardModel.find({});
     res.send(cards);
   } catch (error) {
-    res.status(SERVER_ERROR).send({
-      message: messageServerError,
-      error: error.message,
-      stack: error.stack,
-    });
+    next(error);
   }
 };
 
 // eslint-disable-next-line consistent-return
-const createCard = async (req, res) => {
+const createCard = async (req, res, next) => {
   try {
     const card = await cardModel.create({ ...req.body, owner: req.user._id });
     res.status(CREATED).send({ data: card });
   } catch (error) {
     if (error.name === 'ValidationError') {
-      return res.status(BAD_REQUEST).send({ message: `${messageDataError} при создании карточки` });
+      next(new ValidationError(`${messageDataError} при создании карточки`));
     }
-
-    res.status(SERVER_ERROR).send({
-      message: messageServerError,
-      error: error.message,
-      stack: error.stack,
-    });
+    next(error);
   }
 };
 
 // eslint-disable-next-line consistent-return
-const deleteCard = async (req, res) => {
+const deleteCard = async (req, res, next) => {
   try {
-    const ownCard = await cardModel.findById(req.params.cardId).orFail(new Error('DocumentNotFoundError'));
+    const ownCard = await cardModel.findById(req.params.cardId);
     if (ownCard.owner.toString() !== req.params.cardId) {
-      return res.status(403).send({ message: messageNoRights });
+      next(new ForbiddenError(messageNoRights));
     }
     await cardModel.deleteOne(ownCard._id);
     res.send({ data: ownCard });
   } catch (error) {
     if (error.name === 'CastError') {
-      return res.status(BAD_REQUEST).send({ message: `${messageNotCard}` });
+      next(new ValidationError(messageNotCard));
     } if (error.name === 'Error') {
-      return res.status(NOT_FOUND).send({ message: `${messageNotFound}` });
+      next(new NotFoundError(messageNotFound));
     }
-
-    res.status(SERVER_ERROR).send({
-      message: messageServerError,
-      error: error.message,
-      stack: error.stack,
-    });
+    next(error);
   }
 };
 
 // eslint-disable-next-line consistent-return
-const likeCard = async (req, res) => {
+const likeCard = async (req, res, next) => {
   try {
     const licked = await cardModel.findByIdAndUpdate(
       req.params.cardId,
       { $addToSet: { likes: req.user._id } },
       { new: true },
-    ).orFail(new Error('NoValidId'));
+    );
     res.send({ data: licked });
   } catch (error) {
     if (error.message === 'NoValidId' || error.name === 'Error') {
-      return res.status(NOT_FOUND).send({ message: messageNotFound });
+      next(new NotFoundError(messageNotFound));
     } if (error.name === 'CastError') {
-      return res.status(BAD_REQUEST).send({ message: messageDataError });
+      next(new ValidationError(messageDataError));
     }
-
-    res.status(SERVER_ERROR).send({
-      message: messageServerError,
-      error: error.message,
-      stack: error.stack,
-    });
+    next(error);
   }
 };
 
 // eslint-disable-next-line consistent-return
-const dislikeCard = async (req, res) => {
+const dislikeCard = async (req, res, next) => {
   try {
     const disliked = await cardModel.findByIdAndUpdate(
       req.params.cardId,
       { $pull: { likes: req.user._id } },
       { new: true },
-    ).orFail(new Error('NoValidId'));
+    );
     res.send({ data: disliked });
   } catch (error) {
     if (error.message === 'NoValidId' || error.name === 'Error') {
-      return res.status(NOT_FOUND).send({ message: messageNotFound });
+      next(new NotFoundError(messageNotFound));
     } if (error.name === 'CastError') {
-      return res.status(BAD_REQUEST).send({ message: messageDataError });
+      next(new ValidationError(messageDataError));
     }
-
-    res.status(SERVER_ERROR).send({
-      message: messageServerError,
-      error: error.message,
-      stack: error.stack,
-    });
+    next(error);
   }
 };
 

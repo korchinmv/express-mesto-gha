@@ -2,69 +2,57 @@ const bcrypt = require('bcryptjs');
 const userModel = require('../models/user');
 const {
   // eslint-disable-next-line max-len
-  messageNotUser, messageDataError, messageServerError, messageErrorEmailOrPassword, CREATED, BAD_REQUEST, NOT_FOUND, SERVER_ERROR,
+  messageNotUser, messageEmail, messageDataError, messageErrorEmailOrPassword, CREATED,
 } = require('../utils/responses');
 const { generateToken } = require('../utils/jwtAuth');
+const NotFoundError = require('../errors/NotFoundError');
+const ValidationError = require('../errors/ValidationError');
+const ConflictError = require('../errors/ConflictError');
+const UnauthorizationError = require('../errors/UnauthorizationError');
 
-const getUsers = async (req, res) => {
+const getUsers = async (req, res, next) => {
   try {
     const users = await userModel.find({});
     res.send(users);
   } catch (error) {
-    res.status(500).send({
-      message: messageServerError,
-      error: error.message,
-      stack: error.stack,
-    });
+    next(error);
   }
 };
 
 // eslint-disable-next-line consistent-return
-const getUser = async (req, res) => {
+const getUser = async (req, res, next) => {
   try {
-    const user = await userModel.findById(req.user._id).orFail(new Error('NotValidId'));
+    const user = await userModel.findById(req.user._id);
+    if (!user) {
+      throw new NotFoundError(messageNotUser);
+    }
     res.send({ data: user });
   } catch (error) {
-    if (error.message === 'NotValidId') {
-      return res.status(NOT_FOUND).send({ message: messageNotUser });
-    } if (error.name === 'Error') {
-      return res.status(NOT_FOUND).send({ message: messageNotUser });
-    } if (error.name === 'CastError') {
-      return res.status(BAD_REQUEST).send({ message: messageDataError });
+    if (error.name === 'CastError') {
+      next(new ValidationError(messageDataError));
     }
-
-    res.status(SERVER_ERROR).send({
-      message: messageServerError,
-      error: error.message,
-      stack: error.stack,
-    });
+    next(error);
   }
 };
 
 // eslint-disable-next-line consistent-return
-const getUserById = async (req, res) => {
+const getUserById = async (req, res, next) => {
   try {
-    const user = await userModel.findById(req.params.userId).orFail(new Error('NotValidId'));
+    const user = await userModel.findById(req.params.userId);
+    if (!user) {
+      throw new NotFoundError(messageNotUser);
+    }
     res.send({ data: user });
   } catch (error) {
-    if (error.message === 'NotValidId') {
-      return res.status(NOT_FOUND).send({ message: messageNotUser });
-    } if (error.name === 'Error') {
-      return res.status(NOT_FOUND).send({ message: messageNotUser });
-    } if (error.name === 'CastError') {
-      return res.status(BAD_REQUEST).send({ message: messageDataError });
+    if (error.name === 'CastError') {
+      next(new ValidationError(messageDataError));
     }
-
-    res.status(SERVER_ERROR).send({
-      message: messageServerError,
-      error: error.message,
-      stack: error.stack,
-    });
+    next(error);
   }
 };
 
 // eslint-disable-next-line consistent-return
-const createUser = async (req, res) => {
+const createUser = async (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
@@ -77,69 +65,57 @@ const createUser = async (req, res) => {
       avatar,
       email,
     });
-    res.status(CREATED).send({ data: user });
+    const updUser = user.toObject();
+    delete updUser.password;
+    res.status(CREATED).send({ data: updUser });
   } catch (error) {
     if (error.name === 'ValidationError') {
-      return res.status(BAD_REQUEST).send({ message: messageDataError });
+      next(new ValidationError(messageDataError));
+    } if (error.code === 11000) {
+      next(new ConflictError(messageEmail));
     }
-
-    res.status(SERVER_ERROR).send({
-      message: messageServerError,
-      error: error.message,
-      stack: error.stack,
-    });
+    next(error);
   }
 };
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
   const { email, password } = req.body;
   try {
     const user = await userModel.findOne({ email }).select('+password').orFail(new Error('UnauthorizedError'));
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
-      res.status(401).send({ message: messageErrorEmailOrPassword });
-      return;
+      next(new ConflictError(messageErrorEmailOrPassword));
     }
     const token = generateToken({ _id: user._id }, '7d');
     res.send({ token });
   } catch (error) {
     if (error.message === 'UnauthorizedError') {
-      res.status(401).send({ message: messageErrorEmailOrPassword });
-      return;
+      next(new UnauthorizationError(messageErrorEmailOrPassword));
     }
-    res.status(SERVER_ERROR).send({
-      message: messageServerError,
-      error: error.message,
-      stack: error.stack,
-    });
+    next(error);
   }
 };
 
 // eslint-disable-next-line consistent-return
-const updateUser = async (req, res) => {
+const updateUser = async (req, res, next) => {
   try {
     // eslint-disable-next-line max-len
     const updatedUser = await userModel.findByIdAndUpdate(req.user._id, req.body, { new: true, runValidators: true }).orFail(new Error('NotValidData'));
     res.send({ data: updatedUser });
   } catch (error) {
     if (error.message === 'NotValidData') {
-      return res.status(NOT_FOUND).send({ message: messageDataError });
+      next(new NotFoundError(messageDataError));
     } if (error.name === 'ValidationError') {
-      return res.status(BAD_REQUEST).send({ message: messageDataError });
+      next(new ValidationError(messageDataError));
     } if (error.name === 'Error') {
-      return res.status(NOT_FOUND).send({ message: messageNotUser });
+      next(new NotFoundError(messageNotUser));
     }
-
-    res.status(SERVER_ERROR).send({
-      message: messageServerError,
-      error: error.message,
-      stack: error.stack,
-    });
+    next(error);
   }
 };
 
 // eslint-disable-next-line consistent-return
-const updateAvatar = async (req, res) => {
+const updateAvatar = async (req, res, next) => {
   const { avatar } = req.body;
   try {
     // eslint-disable-next-line max-len
@@ -147,16 +123,11 @@ const updateAvatar = async (req, res) => {
     res.send({ data: updatedAvatar });
   } catch (error) {
     if (error.name === 'ValidationError') {
-      return res.status(BAD_REQUEST).send({ message: messageDataError });
+      next(new ValidationError(messageDataError));
     } if (error.name === 'Error') {
-      return res.status(NOT_FOUND).send({ message: messageNotUser });
+      next(new NotFoundError(messageNotUser));
     }
-
-    res.status(SERVER_ERROR).send({
-      message: messageServerError,
-      error: error.message,
-      stack: error.stack,
-    });
+    next(error);
   }
 };
 
