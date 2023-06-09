@@ -63,7 +63,7 @@ const likeCard = async (req, res, next) => {
       { $addToSet: { likes: req.user._id } },
       { new: true },
     );
-    res.send({ data: liked });
+    res.status(200).send({ data: liked });
   } catch (error) {
     if (error.message === 'NoValidId' || error.name === 'Error') {
       next(new NotFoundError(messageNotFound));
@@ -77,16 +77,19 @@ const likeCard = async (req, res, next) => {
 // eslint-disable-next-line consistent-return
 const dislikeCard = async (req, res, next) => {
   try {
-    const card = await cardModel.findById(req.params.cardId);
-    if (!card) {
-      next(new NotFoundError(messageNotFound));
-    }
-    const disliked = await cardModel.updateOne(
+    // const card = await cardModel.findById(req.params.cardId);
+    // if (!card) {
+    //   next(new NotFoundError(messageNotFound));
+    // }
+    const disliked = await cardModel.findByIdAndUpdate(
       req.params.cardId,
       { $pull: { likes: req.user._id } },
       { new: true },
     );
-    res.send({ data: disliked });
+    if (disliked === null) {
+      next(new NotFoundError(messageNotFound));
+    }
+    res.status(200).send({ data: disliked });
   } catch (error) {
     if (error.message === 'NoValidId' || error.name === 'Error') {
       next(new NotFoundError(messageNotFound));
