@@ -1,12 +1,14 @@
 const router = require('express').Router();
 const userRouter = require('./users');
 const cardsRouter = require('./cards');
+const authRouter = require('./auth');
 
 const { auth } = require('../middlewares/auth');
 
 const notFound = 404;
 const badRequest = 'Страница не найдена';
 
+router.use('/', authRouter);
 router.use('/users', userRouter);
 router.use('/cards', auth, cardsRouter);
 router.use((req, res, next) => {
