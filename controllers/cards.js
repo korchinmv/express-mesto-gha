@@ -34,9 +34,9 @@ const createCard = async (req, res, next) => {
 const deleteCard = async (req, res, next) => {
   try {
     const ownCard = await cardModel.findById(req.params.cardId);
-    if (ownCard.owner.toString() !== req.params.cardId) {
+    if (ownCard.owner.toString() !== req.user._id) {
       next(new ForbiddenError(messageNoRights));
-    } if (!ownCard) {
+    } if (ownCard === null) {
       next(new NotFoundError(messageNotFound));
     }
     await cardModel.deleteOne(ownCard._id);
@@ -54,16 +54,16 @@ const deleteCard = async (req, res, next) => {
 // eslint-disable-next-line consistent-return
 const likeCard = async (req, res, next) => {
   try {
-    const licked = await cardModel.findByIdAndUpdate(
+    const card = await cardModel.findById(req.params.cardId);
+    if (!card) {
+      next(new NotFoundError(messageNotFound));
+    }
+    const liked = await cardModel.updateOne(
       req.params.cardId,
       { $addToSet: { likes: req.user._id } },
       { new: true },
     );
-    if (!licked) {
-      next(new NotFoundError(messageNotFound));
-    }
-
-    res.send({ data: licked });
+    res.send({ data: liked });
   } catch (error) {
     if (error.message === 'NoValidId' || error.name === 'Error') {
       next(new NotFoundError(messageNotFound));
@@ -77,14 +77,15 @@ const likeCard = async (req, res, next) => {
 // eslint-disable-next-line consistent-return
 const dislikeCard = async (req, res, next) => {
   try {
-    const disliked = await cardModel.findByIdAndUpdate(
+    const card = await cardModel.findById(req.params.cardId);
+    if (!card) {
+      next(new NotFoundError(messageNotFound));
+    }
+    const disliked = await cardModel.updateOne(
       req.params.cardId,
       { $pull: { likes: req.user._id } },
       { new: true },
     );
-    if (!disliked) {
-      next(new NotFoundError(messageNotFound));
-    }
     res.send({ data: disliked });
   } catch (error) {
     if (error.message === 'NoValidId' || error.name === 'Error') {
