@@ -36,9 +36,11 @@ const deleteCard = async (req, res, next) => {
     const ownCard = await cardModel.findById(req.params.cardId);
     if (ownCard.owner.toString() !== req.params.cardId) {
       next(new ForbiddenError(messageNoRights));
+    } if (!ownCard) {
+      next(new NotFoundError(messageNotFound));
     }
     await cardModel.deleteOne(ownCard._id);
-    res.send({ data: ownCard });
+    res.status(200).send({ data: ownCard });
   } catch (error) {
     if (error.name === 'CastError') {
       next(new ValidationError(messageNotCard));
@@ -57,6 +59,10 @@ const likeCard = async (req, res, next) => {
       { $addToSet: { likes: req.user._id } },
       { new: true },
     );
+    if (!licked) {
+      next(new NotFoundError(messageNotFound));
+    }
+
     res.send({ data: licked });
   } catch (error) {
     if (error.message === 'NoValidId' || error.name === 'Error') {
@@ -76,6 +82,9 @@ const dislikeCard = async (req, res, next) => {
       { $pull: { likes: req.user._id } },
       { new: true },
     );
+    if (!disliked) {
+      next(new NotFoundError(messageNotFound));
+    }
     res.send({ data: disliked });
   } catch (error) {
     if (error.message === 'NoValidId' || error.name === 'Error') {

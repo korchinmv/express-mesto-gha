@@ -1,12 +1,18 @@
 const { celebrate, Joi } = require('celebrate');
-const URL_REGEXP = require('../utils/responses');
+const validator = require('validator');
 
 const validateSignUp = celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().regex(RegExp(URL_REGEXP)),
-    email: Joi.string().required(),
+    avatar: Joi.string().custom((value, helpers) => {
+      if (validator.isURL(value)) {
+        return value;
+      }
+
+      return helpers.message('Введите коректный URL адрес');
+    }),
+    email: Joi.string().required().email(),
     password: Joi.string().required(),
   }),
 });
@@ -33,14 +39,26 @@ const validateUpdateUser = celebrate({
 
 const validateUpdateAvatar = celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string().required().regex(RegExp(URL_REGEXP)),
+    avatar: Joi.string().required().custom((value, helpers) => {
+      if (validator.isURL(value)) {
+        return value;
+      }
+
+      return helpers.message('Введите коректный URL адрес');
+    }),
   }),
 });
 
 const validateCreateCard = celebrate({
   body: Joi.object().keys({
     name: Joi.string().required().min(2).max(30),
-    link: Joi.string().min(2).required().regex(RegExp(URL_REGEXP)),
+    link: Joi.string().min(2).required().custom((value, helpers) => {
+      if (validator.isURL(value)) {
+        return value;
+      }
+
+      return helpers.message('Введите коректный URL адрес');
+    }),
   }),
 });
 
