@@ -59,8 +59,10 @@ const likeCard = async (req, res, next) => {
       { $addToSet: { likes: req.user._id } },
       { new: true },
     );
+    console.log(liked);
     if (liked === null) {
       next(new NotFoundError(messageNotFound));
+      return;
     }
     res.status(200).send({ data: liked });
   } catch (error) {
