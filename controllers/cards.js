@@ -23,9 +23,7 @@ const createCard = async (req, res, next) => {
     const card = await cardModel.create({ ...req.body, owner: req.user._id });
     res.status(CREATED).send({ data: card });
   } catch (error) {
-    if (error.name === 'ValidationError') {
-      next(new ValidationError(`${messageDataError} при создании карточки`));
-    }
+    if (error.name === 'ValidationError') return next(new ValidationError(`${messageDataError} при создании карточки`));
     next(error);
   }
 };
@@ -35,17 +33,15 @@ const deleteCard = async (req, res, next) => {
   try {
     const ownCard = await cardModel.findById(req.params.cardId);
     if (ownCard === null) {
-      next(new NotFoundError(messageNotFound));
+      return next(new NotFoundError(messageNotFound));
     } if (ownCard.owner.toString() !== req.user._id) {
-      next(new ForbiddenError(messageNoRights));
+      return next(new ForbiddenError(messageNoRights));
     }
     await cardModel.deleteOne(ownCard._id);
     res.status(200).send({ data: ownCard });
   } catch (error) {
     if (error.name === 'CastError') {
-      next(new ValidationError(messageNotCard));
-    } if (error.name === 'Error') {
-      next(new NotFoundError(messageNotFound));
+      return next(new ValidationError(messageNotCard));
     }
     next(error);
   }
@@ -65,9 +61,7 @@ const likeCard = async (req, res, next) => {
     }
     res.status(200).send({ data: liked });
   } catch (error) {
-    if (error.message === 'NoValidId' || error.name === 'Error') {
-      next(new NotFoundError(messageNotFound));
-    } if (error.name === 'CastError') {
+    if (error.name === 'CastError') {
       next(new ValidationError(messageDataError));
     }
     next(error);
@@ -82,15 +76,10 @@ const dislikeCard = async (req, res, next) => {
       { $pull: { likes: req.user._id } },
       { new: true },
     );
-    if (disliked === null) {
-      next(new NotFoundError(messageNotFound));
-      return;
-    }
+    if (disliked === null) return next(new NotFoundError(messageNotFound));
     res.status(200).send({ data: disliked });
   } catch (error) {
-    if (error.message === 'NoValidId' || error.name === 'Error') {
-      next(new NotFoundError(messageNotFound));
-    } if (error.name === 'CastError') {
+    if (error.name === 'CastError') {
       next(new ValidationError(messageDataError));
     }
     next(error);

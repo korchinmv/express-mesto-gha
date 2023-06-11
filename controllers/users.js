@@ -29,7 +29,7 @@ const getUser = async (req, res, next) => {
     res.send({ data: user });
   } catch (error) {
     if (error.name === 'CastError') {
-      next(new ValidationError(messageDataError));
+      return next(new ValidationError(messageDataError));
     }
     next(error);
   }
@@ -45,7 +45,7 @@ const getUserById = async (req, res, next) => {
     res.send({ data: user });
   } catch (error) {
     if (error.name === 'CastError') {
-      next(new ValidationError(messageDataError));
+      return next(new ValidationError(messageDataError));
     }
     next(error);
   }
@@ -70,7 +70,7 @@ const createUser = async (req, res, next) => {
     res.status(CREATED).send({ data: updUser });
   } catch (error) {
     if (error.name === 'ValidationError') {
-      next(new ValidationError(messageDataError));
+      return next(new ValidationError(messageDataError));
     } if (error.code === 11000) {
       next(new ConflictError(messageEmail));
     }
@@ -78,20 +78,19 @@ const createUser = async (req, res, next) => {
   }
 };
 
+// eslint-disable-next-line consistent-return
 const login = async (req, res, next) => {
   const { email, password } = req.body;
   try {
     const user = await userModel.findOne({ email }).select('+password').orFail(new Error('UnauthorizedError'));
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
-      next(new ConflictError(messageErrorEmailOrPassword));
+      return next(new UnauthorizationError(messageErrorEmailOrPassword));
     }
     const token = generateToken({ _id: user._id }, '7d');
     res.send({ token });
   } catch (error) {
-    if (error.message === 'UnauthorizedError') {
-      next(new UnauthorizationError(messageErrorEmailOrPassword));
-    }
+    if (error.message === 'UnauthorizedError') return next(new UnauthorizationError(messageErrorEmailOrPassword));
     next(error);
   }
 };
@@ -107,8 +106,6 @@ const updateUser = async (req, res, next) => {
       next(new NotFoundError(messageDataError));
     } if (error.name === 'ValidationError') {
       next(new ValidationError(messageDataError));
-    } if (error.name === 'Error') {
-      next(new NotFoundError(messageNotUser));
     }
     next(error);
   }
@@ -124,8 +121,6 @@ const updateAvatar = async (req, res, next) => {
   } catch (error) {
     if (error.name === 'ValidationError') {
       next(new ValidationError(messageDataError));
-    } if (error.name === 'Error') {
-      next(new NotFoundError(messageNotUser));
     }
     next(error);
   }

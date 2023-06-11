@@ -6,6 +6,8 @@ const messageErrorEmailOrPassword = 'Неправильные почта или 
 const messageAuthorizationError = 'Пользователь не авторизован';
 const messageNoRights = 'Нет прав';
 const messageEmail = 'Данный эмеил уже занят другим пользователем';
+const messageError = 'Произошла ошибка';
+const messageBadRequest = 'Страница не найдена';
 const CREATED = 201;
 module.exports = {
   messageNotCard,
@@ -16,5 +18,7 @@ module.exports = {
   messageNotUser,
   messageNoRights,
   messageEmail,
+  messageError,
+  messageBadRequest,
   CREATED,
 };
