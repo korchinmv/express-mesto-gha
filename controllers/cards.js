@@ -38,7 +38,7 @@ const deleteCard = async (req, res, next) => {
       return next(new ForbiddenError(messageNoRights));
     }
     await cardModel.deleteOne(ownCard._id);
-    res.status(200).send({ data: ownCard });
+    res.send({ data: ownCard });
   } catch (error) {
     if (error.name === 'CastError') {
       return next(new ValidationError(messageNotCard));
@@ -56,13 +56,12 @@ const likeCard = async (req, res, next) => {
       { new: true },
     );
     if (liked === null) {
-      next(new NotFoundError(messageNotFound));
-      return;
+      return next(new NotFoundError(messageNotFound));
     }
     res.status(200).send({ data: liked });
   } catch (error) {
     if (error.name === 'CastError') {
-      next(new ValidationError(messageDataError));
+      return next(new ValidationError(messageDataError));
     }
     next(error);
   }
@@ -80,7 +79,7 @@ const dislikeCard = async (req, res, next) => {
     res.status(200).send({ data: disliked });
   } catch (error) {
     if (error.name === 'CastError') {
-      next(new ValidationError(messageDataError));
+      return next(new ValidationError(messageDataError));
     }
     next(error);
   }

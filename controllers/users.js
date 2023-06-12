@@ -72,7 +72,7 @@ const createUser = async (req, res, next) => {
     if (error.name === 'ValidationError') {
       return next(new ValidationError(messageDataError));
     } if (error.code === 11000) {
-      next(new ConflictError(messageEmail));
+      return next(new ConflictError(messageEmail));
     }
     next(error);
   }
@@ -103,9 +103,9 @@ const updateUser = async (req, res, next) => {
     res.send({ data: updatedUser });
   } catch (error) {
     if (error.message === 'NotValidData') {
-      next(new NotFoundError(messageDataError));
+      return next(new NotFoundError(messageDataError));
     } if (error.name === 'ValidationError') {
-      next(new ValidationError(messageDataError));
+      return next(new ValidationError(messageDataError));
     }
     next(error);
   }
@@ -120,7 +120,7 @@ const updateAvatar = async (req, res, next) => {
     res.send({ data: updatedAvatar });
   } catch (error) {
     if (error.name === 'ValidationError') {
-      next(new ValidationError(messageDataError));
+      return next(new ValidationError(messageDataError));
     }
     next(error);
   }
